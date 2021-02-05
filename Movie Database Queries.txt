@@ -1,0 +1,24 @@
+#Find the customer information, first name, last name and email from store 2.
+
+SELECT first_name, last_name, email, store_id
+FROM customer
+WHERE store_id = 2
+
+#Find the number of titles rented at each rate.
+SELECT count(title), rental_rate
+FROM film
+group by 2
+
+#Find the total number of titles available at each movie rating
+SELECT count(title), rating
+FROM film
+GROUP BY rating
+ORDER BY count(title)
+
+
+#Find the total number of titles available by each rating and price, include subtotals.
+SELECT count(title), rating, rental_rate
+FROM film
+GROUP BY rating, rental_rate with ROLLUP
+
+
