@@ -1,24 +1,68 @@
 #Find the customer information, first name, last name and email from store 2.
-
 SELECT first_name, last_name, email, store_id
 FROM customer
-WHERE store_id = 2
+WHERE store_id = 2;
 
-#Find the number of titles rented at each rate.
+
 SELECT count(title), rental_rate
 FROM film
-group by 2
+group by 2;
 
-#Find the total number of titles available at each movie rating
-SELECT count(title), rating
+#Films by Rating
+SELECT count(film_id), rating
 FROM film
 GROUP BY rating
-ORDER BY count(title)
+ORDER BY count(film_id);
 
-
-#Find the total number of titles available by each rating and price, include subtotals.
-SELECT count(title), rating, rental_rate
+#Films by Rating and Price with group subtotals
+SELECT count(film_id), rating, rental_rate
 FROM film
-GROUP BY rating, rental_rate with ROLLUP
+GROUP BY rating, rental_rate with ROLLUP;
 
+#Films by Price then Rating
+SELECT count(film_id), rental_rate, rating
+FROM film
+GROUP BY rental_rate, rating
+ORDER BY count(film_id);
+
+#customer ID, name and address
+SELECT customer.customer_id, customer.first_name, customer.last_name, address.address
+FROM customer, address
+WHERE customer.address_id = address.address_id;
+
+#Film information including title, category and language.
+SELECT film.title, 
+#	film_category.category_id, 
+	category.name as category_name, 
+#	film.language_id, 
+	language.name as language_name
+FROM 
+	film, film_category, category, language
+WHERE 
+	film.film_id = film_category.film_id 
+	AND film_category.category_id = category.category_id 
+	AND film.language_id = language.language_id
+ORDER BY film.film_id
+;
+
+#How many times has each video been rented
+SELECT
+    count(r.rental_id), 
+#	r.inventory_id, 
+#	i.film_id, 
+	f.title 
+FROM
+    rental r, inventory i, film f
+WHERE
+    r.inventory_id = i.inventory_id 
+    AND i.film_id = f.film_id
+GROUP BY f.title 
+WITH ROLLUP
+#ORDER BY f.title
+;
+
+
+
+
+select * from language 
 
