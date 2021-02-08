@@ -1,40 +1,45 @@
+#Examples are from the Udemy course SQL for Data Analysis:  Weekender Crash Course
+#The course provided a database based on a movie store concept.  
+#There were 23 various tables related to movie details, store inventory and customer data.
+#Exercises invloved pulling data from the various tables to evaluate details about movies and stores.
+
+
 #Find the customer information, first name, last name and email from store 2.
 SELECT first_name, last_name, email, store_id
 FROM customer
 WHERE store_id = 2;
 
 
-SELECT count(title), rental_rate
-FROM film
-group by 2;
-
 #Films by Rating
+#Determine how many movies there are in each of the rating categories.
 SELECT count(film_id), rating
 FROM film
 GROUP BY rating
 ORDER BY count(film_id);
 
 #Films by Rating and Price with group subtotals
+#Determine how many films there are by rating, and within each rating how many by rental price.
 SELECT count(film_id), rating, rental_rate
 FROM film
 GROUP BY rating, rental_rate with ROLLUP;
 
 #Films by Price then Rating
+#How many films there are by price, and by rating within each price group.
 SELECT count(film_id), rental_rate, rating
 FROM film
 GROUP BY rental_rate, rating
 ORDER BY count(film_id);
 
 #customer ID, name and address
+#Find the customer information
 SELECT customer.customer_id, customer.first_name, customer.last_name, address.address
 FROM customer, address
 WHERE customer.address_id = address.address_id;
 
 #Film information including title, category and language.
+#Find the category and language of each film in the inventory
 SELECT film.title, 
-#	film_category.category_id, 
 	category.name as category_name, 
-#	film.language_id, 
 	language.name as language_name
 FROM 
 	film, film_category, category, language
@@ -42,14 +47,12 @@ WHERE
 	film.film_id = film_category.film_id 
 	AND film_category.category_id = category.category_id 
 	AND film.language_id = language.language_id
-ORDER BY film.film_id
-;
+ORDER BY film.film_id;
 
+#Video Rentals
 #How many times has each video been rented
 SELECT
     count(r.rental_id), 
-#	r.inventory_id, 
-#	i.film_id, 
 	f.title 
 FROM
     rental r, inventory i, film f
@@ -57,12 +60,6 @@ WHERE
     r.inventory_id = i.inventory_id 
     AND i.film_id = f.film_id
 GROUP BY f.title 
-WITH ROLLUP
-#ORDER BY f.title
-;
+ORDER BY f.title;
 
-
-
-
-select * from language 
 
