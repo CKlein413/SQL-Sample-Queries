@@ -59,7 +59,41 @@ FROM
 WHERE
     r.inventory_id = i.inventory_id 
     AND i.film_id = f.film_id
-GROUP BY f.title 
-ORDER BY f.title;
+GROUP BY f.title;
 
+#What films are making the most money
+#revenue = price * number of rentals
+SELECT
+    f.title as "Film Title", count(r.rental_id) as "Number of Rentals", f.rental_rate as "Rental Rate", count(r.rental_id) * f.rental_rate as Revenue
+FROM
+    rental r, inventory i, film f
+WHERE
+    r.inventory_id = i.inventory_id 
+    AND i.film_id = f.film_id
+GROUP BY 1
+ORDER BY 4 desc;
 
+#What customer has spent the most money on rentals
+SELECT
+    p.customer_id, SUM(p.amount)
+FROM
+    payment p
+GROUP BY
+    1
+ORDER BY
+    2 desc;
+
+#Which store generates the most revenue
+#revenu equals the total amount of payments made at each store
+SELECT
+    i.store_id as "Store ID", 
+    SUM(p.amount) as "Total Paments"
+FROM
+    inventory i, rental r, payment p
+WHERE
+    i.inventory_id = r.inventory_id
+    AND r.rental_id = p.rental_id
+GROUP BY
+    1
+ORDER BY
+    2 desc;
