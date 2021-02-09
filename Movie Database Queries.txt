@@ -97,3 +97,69 @@ GROUP BY
     1
 ORDER BY
     2 desc;
+
+#Rentals By Month
+#Determine total movie rentals by month
+SELECT
+    left(r.rental_date,7), count(r.rental_id)
+FROM 
+    rental r
+GROUP BY
+    1
+ORDER BY
+    2 desc;
+    
+    
+#Rental Dates
+#Determine the first and last dates a movie was rented
+SELECT
+    f.title as "Film Title", max(r.rental_date) as "Last Rental Date", min(r.rental_date) as "First Rental Date"
+FROM 
+    rental r, inventory i, film f
+WHERE
+    r.inventory_id = i.inventory_id
+    AND i.film_id = f.film_id
+GROUP BY 
+    f.film_id;
+    
+    
+#Customer Last Rental
+#Find the date of each customer's last rental
+SELECT 
+    concat(c.first_name, " ", c.last_name) as "Customer Name", c.email as "Customer E-Mail", MAX(r.rental_date) as "Last Rental Date"
+FROM
+    rental r, customer c
+WHERE
+    r.customer_id = c.customer_id
+GROUP BY
+    r.customer_id;
+    
+    
+#Revenue By Month
+#Determine total revenue by month
+SELECT
+    sum(p.amount) as "Total Revenue", left(p.payment_date,7) as "Month"
+FROM
+    payment p
+GROUP BY
+    2;
+
+#How many distinct Renters Per Month
+#Number of customers renting and average number of movies rented
+SELECT
+    left(r.rental_date, 7) as "Month", count(r.rental_id) as "total_rentals", count(distinct r.customer_id) as "unique_renters", count(r.rental_id)/count(distinct r.customer_id) as "avg_num_rentals_per_renter"
+FROM 
+    rental r
+GROUP BY 
+    1;
+        
+#Number Of Distinct Film Rentals
+#Determine the number of distinct rentals by movie title and month
+SELECT
+    count(r.rental_id) as "Total Rentals", count(distinct i.film_id) as "Unique Films Rented", left(r.rental_date, 7) as "Rental Month", count(r.rental_id)/count(distinct i.film_id) as "Rentals Per Film"
+FROM
+    rental r, inventory i
+WHERE
+   i.inventory_id = r.inventory_id
+GROUP BY
+    3;
