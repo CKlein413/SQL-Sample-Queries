@@ -2,6 +2,8 @@
 #The course provided a database based on a movie store concept.  
 #There were 23 various tables related to movie details, store inventory and customer data.
 #Exercises invloved pulling data from the various tables to evaluate details about movies and stores.
+#A site called sqlsnack.com was provided for running SQL against the prepopulated data.
+#Anyone may create an account there and run these queries
 
 
 #Find the customer information, first name, last name and email from store 2.
@@ -17,11 +19,13 @@ FROM film
 GROUP BY rating
 ORDER BY count(film_id);
 
+
 #Films by Rating and Price with group subtotals
 #Determine how many films there are by rating, and within each rating how many by rental price.
 SELECT count(film_id), rating, rental_rate
 FROM film
 GROUP BY rating, rental_rate with ROLLUP;
+
 
 #Films by Price then Rating
 #How many films there are by price, and by rating within each price group.
@@ -30,11 +34,13 @@ FROM film
 GROUP BY rental_rate, rating
 ORDER BY count(film_id);
 
+
 #customer ID, name and address
 #Find the customer information
 SELECT customer.customer_id, customer.first_name, customer.last_name, address.address
 FROM customer, address
 WHERE customer.address_id = address.address_id;
+
 
 #Film information including title, category and language.
 #Find the category and language of each film in the inventory
@@ -49,6 +55,7 @@ WHERE
 	AND film.language_id = language.language_id
 ORDER BY film.film_id;
 
+
 #Video Rentals
 #How many times has each video been rented
 SELECT
@@ -60,6 +67,7 @@ WHERE
     r.inventory_id = i.inventory_id 
     AND i.film_id = f.film_id
 GROUP BY f.title;
+
 
 #What films are making the most money
 #revenue = price * number of rentals
@@ -73,6 +81,7 @@ WHERE
 GROUP BY 1
 ORDER BY 4 desc;
 
+
 #What customer has spent the most money on rentals
 SELECT
     p.customer_id, SUM(p.amount)
@@ -83,8 +92,9 @@ GROUP BY
 ORDER BY
     2 desc;
 
+
 #Which store generates the most revenue
-#revenu equals the total amount of payments made at each store
+#revenue equals the total amount of payments made at each store
 SELECT
     i.store_id as "Store ID", 
     SUM(p.amount) as "Total Paments"
@@ -97,6 +107,7 @@ GROUP BY
     1
 ORDER BY
     2 desc;
+
 
 #Rentals By Month
 #Determine total movie rentals by month
@@ -178,6 +189,7 @@ WHERE
 GROUP BY
     1;
     
+	
 #Users Rented 3 times
 #Find the users who have rented at least three times
 SELECT
@@ -186,6 +198,7 @@ FROM
     rental r
 GROUP BY 1
 HAVING count(r.rental_id) >=3;
+
 
 #Store One Revenue For R and PG-13
 #What is the revenue for store 1 from rentals of R and PG-13 movies 
@@ -205,3 +218,137 @@ GROUP BY
     1,2
 ORDER BY
     3 desc;
+
+
+## Customers renting more than 20 times
+SELECT
+    rpc.num_rentals, 
+    count (distinct rpc.customer_id) as num_customers, sum(p.amount) as revenu
+FROM
+    (SELECT
+        r.customer_id, count(distinct r.rental_id) as num_rentals
+    FROM
+        rental r
+    GROUP BY 1) as rpc,
+    payment p
+WHERE
+    rpc.customer_id = p.customer_id
+    AND rpc.num_rentals > 20
+GROUP BY
+    1;
+
+
+#Create temporary table for use in subsequent queries
+#What users have rented more than 20 videos
+create temporary table rpc as 
+SELECT
+    r.customer_id,
+    count(distinct r.rental)id as num_rentals
+FROM 
+    rental r
+GROUP BY 1;
+
+SELECT
+    sum(p.amount) as total_revenue
+FROM
+    rpc,
+    payment p
+WHERE
+    rpc.customer_id = p.customer_id
+    AND rpc.num_rentals > 20;
+    
+#Active Users
+#Table of all customers who are currently active
+CREATE temporary table activeUsers as
+SELECT
+    c.*,
+    a.phone
+FROM
+    customer c,
+        JOIN address a ON c.address_id = a.address_id
+WHERE
+    c.active = 1;
+
+#Reward Users
+#All customers who have rented more than 30 times
+CREATE temporary table rewardUsers
+SELECT
+    r.customer_id,
+    count(r.rental_id) as num_rentals,
+    max(r.rental_date)
+FROM 
+    rental r
+GROUP BY 1
+HAVING num_rentals >30;
+
+#Active Reward Users
+#Customer ID, email & first name for all active reward users.
+SELECT 
+    au.customer_id, 
+    au.email,
+    au.first_name
+FROM
+    activeUsers au, 
+        JOIN rewardUsers ON au.customer_id = ru.customer_id
+GROUP_BY 1;
+
+#All Reward Users
+SELECT
+    r.customer_id,
+    c.email,
+    a.phone
+FROM
+    rewardUser r
+        JOIN customer c on r.customer_id = c.customer_id
+        LEFT JOIN activeUsers a on a.customer_id = r.customer_id
+GROUP BY 1;
+
+
+# Creating data for Cohort Analysis
+#Customer First rental
+DROP temporary table if exists first_rental;
+CREATE temporary table first_rental
+SELECT
+    customer_id,
+    min(rental_date) as first_time
+FROM 
+    rental
+GROUP BY 1;
+
+#Cohort Size
+DROP TEMPORARY TABLE IF EXISTS cohort_size;
+CREATE TEMPORARY TABLE cohort_size
+SELECT
+    left(first_time, 7) as month
+    count(customer_id) as num
+FROM
+    first_rental
+GROUP BY
+    1;
+
+#Revenue per user for each cohort and month
+DROP TEMPORARY TABLE IF EXISTS cohort;
+CREATE TEMPORARY TABLE cohort
+SELECT
+    (date_format(f.first_time, '%Y%m') as cohort_formatted,
+    (date_format(f.first_time, '%Y%m') as rental_date_formatted,
+    cs.num as cohort_size,
+    sum(p.amount) as month_rev
+    sum(p.amount)/cs.num as RPU
+FROM
+    rental r
+    JOIN first_rental f ON r.customer_id = f.customer_id
+    JOIN cohort_size cs ON cs.month = left(f.first_time, 7)
+    JOIN payment p ON p.rental_id = r.rental_id
+GROUP BY
+    1,2;
+    
+# Setup for Export
+SELECT 
+    left(STR_TO_DATE(cohort_formatted,'%Y%m),7') as "First Rental Month",
+    period_diff(rental_date_formatted,cohort_formatted) as "Months After Join",
+    cohort_size,
+    RPU
+FROM
+    cohort
+ORDER BY 1,2;
