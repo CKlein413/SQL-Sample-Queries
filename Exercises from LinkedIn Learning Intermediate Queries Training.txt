@@ -1,0 +1,133 @@
+These queries came from the course “SQL Practice: Intermediate Queries” by Scott Simpson 
+https://lnkd.in/eRR8j8-7  
+Code Challenges provided by CoderPad. https://lnkd.in/eEbV7fDA
+
+-----------------------------------------------------
+-----------------------------------------------------
+#1 WHO ARE YOUR TOP CUSTOMERS
+SELECT 
+    O.CustomerID,
+    C.FirstName,
+    C.LastName,
+    SUM(D.Price) AS TotalSpend
+FROM 
+    Orders O
+JOIN
+    OrdersDishes OD ON O.OrderID = OD.OrderID
+JOIN
+    Dishes D ON OD.DishID = D.DishID
+JOIN
+    Customers C ON O.CustomerID = C.CustomerID
+GROUP BY
+    O.CustomerID
+HAVING
+	TotalSpend > 450.00
+ORDER BY
+    TotalSpend DESC;
+-----------------------------------------------------
+-----------------------------------------------------
+#2 LIST ITEMS IN EACH ORDER
+SELECT 
+    OD.ORDERID,
+    GROUP_CONCAT(D.NAME ORDER BY D.NAME) AS concatenated_string
+FROM 
+    OrdersDishes OD
+JOIN
+    Orders O ON O.ORDERID = OD.ORDERID
+JOIN
+    Dishes D ON D.DishID = OD.DISHID
+WHERE
+    O.OrderDate >  '2022-05-01' 
+GROUP BY
+    OD.ORDERID;
+-----------------------------------------------------
+-----------------------------------------------------
+#3 WHICH DAYS DID PEOPLE ORDER PIZZA
+SELECT 
+    COUNT(O.OrderID) AS NumSold,
+    CAST(O.OrderDate AS DATE) AS Day
+FROM 
+    Dishes D
+JOIN
+    OrdersDishes OD ON OD.DishID = D.DISHID
+JOIN
+    Orders O ON O.OrderID = OD.OrderID
+WHERE 
+    name LIKE '%Pizza%'
+GROUP BY 
+    Day
+Order BY		
+	Day;
+-----------------------------------------------------
+-----------------------------------------------------
+#4 SEASONAL SALE
+-- MY SOLUTION
+SELECT 
+    Name AS DishName,
+    Price AS OriginalPrice,
+CASE
+    WHEN price < 7.00 THEN '5%'
+    WHEN price >= 7.00 AND price <10.00 THEN '10%'
+    WHEN price >= 10.00 THEN '15%'
+    ELSE 'No Discount'
+END AS DiscountPercent,
+ROUND(
+	CASE
+		WHEN price < 7.00 THEN (price - (price * .05))
+		WHEN price >= 7.00 AND price <10.00 THEN (price - (price * .1))
+		WHEN price >= 10.00 THEN (price - (price * .15))
+		ELSE price
+	END),
+	2) AS DiscountedPrice
+FROM 
+    Dishes
+ORDER BY
+	DishName;
+	
+-- INSTRUCTOR SOLUTION
+	SELECT 
+    Name AS DishName,
+    Price AS OriginalPrice,
+CASE
+    WHEN price < 7 THEN '5%'
+    WHEN price BETWEEN 7 AND 10 THEN '10%'
+    ELSE '15%'
+END AS DiscountPercent,
+ROUND(
+	Price * (
+		1 - CASE
+			WHEN price < 7 THEN 0.05
+			WHEN price BETWEEN 7 AND 10 THEN 0.1
+			ELSE 0.15
+		END
+	),
+	2
+) AS DiscountedPrice
+FROM 
+    Dishes
+ORDER BY
+	DishName;
+-----------------------------------------------------
+-----------------------------------------------------
+#5 VENDOR INTEGRATION
+-- MY SOLUTION
+SELECT 
+    LPAD(EMPLOYEEID, 5, '0') AS ID,
+    CONCAT(LASTNAME, ', ', FirstName) AS Name,
+    LOWER(CONCAT(LEFT(FIRSTNAME, 1), LEFT(LASTNAME, 7))) AS Login,
+    CONCAT(USERNAME, '@nadias-garden.com') AS Email
+FROM Employees
+
+ORDER BY
+    LASTNAME;
+	
+-- INSTRUCTOR SOLUTION
+SELECT 
+    LPAD(EMPLOYEEID, 5, '0') AS ID,
+    CONCAT(LASTNAME, ', ', FirstName) AS Name,
+    LOWER(CONCAT(SUBSTRING(FIRSTNAME, 1,1), SUBSTRING(LASTNAME, 1,7))) AS Login,
+    CONCAT(USERNAME, '@nadias-garden.com') AS Email
+FROM Employees
+
+ORDER BY
+    LASTNAME;
