@@ -1,0 +1,709 @@
+These queries came from the course “Level Up: SQL ” by Scott Simpson 
+Using a GitHub Codespace executed various queries against two different databases.
+One for a restaurant and the other for a library.
+
+https://www.linkedin.com/learning/certificates/3dd9f5b3f566e864f15218dfd04aea61f1328894c576deb5fd6df8af499c6486
+-----------------------------------------------------
+-----------------------------------------------------
+01_01 Invitations
+-- Generate a list of customer information.
+
+-- Show their first name, last name, and email address.
+-- Sort the list of results by last name.
+
+SELECT
+  FirstName,
+  LastName,
+  Email
+FROM 
+  Customers
+ORDER BY 
+  LastName
+
+-----------------------------------------------------
+-----------------------------------------------------
+01_02 Anniversary
+-- Create a table in the database to store customer
+-- responses to our anniversary invitation.
+
+-- Associate a customer's ID number with the number of people
+-- they plan to bring in their party.
+
+-- Hint: SQLite offers the INTEGER and REAL datatypes
+
+CREATE TABLE
+  AnniversaryParty(
+    CustomerID INTEGER,
+    NumberInParty INTEGER);
+	
+-----------------------------------------------------
+-----------------------------------------------------
+01_03 Print Menus
+-- Create reports that will be used to make three menus.
+
+-- Create a report with all the items sorted by price (lowest to highest).
+SELECT
+  Type,
+  Name,
+  Description,
+  Price
+FROM  
+  Dishes
+ORDER BY  
+  Price ASC
+
+-- Create a report showing appetizers and beverages.
+SELECT 
+  Type,
+  Name,
+  Description,
+  Price
+FROM
+  Dishes
+WHERE 
+  Type IN ('Beverage', 'Appetizer')
+ORDER BY
+  Type, Price ASC
+
+-- Create a report with all items except beverages.
+SELECT 
+  Type,
+  Name,
+  Description,
+  Price
+FROM
+  Dishes
+WHERE 
+  Type != 'Beverage'
+ORDER BY
+  Type, Price ASC
+
+-----------------------------------------------------
+-----------------------------------------------------
+01_04 Sign a customer up for loyalty program
+-- Add a customer to the restaurant's loyalty program.
+
+-- Use the following information to create a record:
+-- Anna Smith (asmith@samoca.org)
+-- 479 Lapis Dr., Memphis, TN
+-- Phone: (555) 555-1212; Birthday: July 21, 1973
+
+INSERT INTO 
+  Customers (FirstName, LastName, Email, Address, City, State, Phone, Birthday)
+VALUES ('Anna', 'Smith', 'asmith@samoca.org', '479 Lapis Dr.', 'Memphis', 'TN', '555-555-1212', '1973-07-21');
+
+SELECT *
+FROM
+  Customers
+WHERE Email = 'asmith@samoca.org'
+-----------------------------------------------------
+-----------------------------------------------------
+01_05 Update customer's personal information
+-- Update a customer's contact information.
+
+-- Taylor Jenkins, of 27170 6th Ave., Washington, DC,
+-- has moved to 74 Pine St., New York, NY.
+
+SELECT 
+  CustomerID,
+  FirstName,
+  LastName,
+  Address,
+  City,
+  State
+FROM
+  Customers
+WHERE 
+  LastName = 'Jenkins'
+AND 
+  Address = '27170 6th Ave.'
+
+UPDATE Customers
+SET Address = '74 Pine St.', 
+    City = 'New York', 
+    State = 'NY' 
+WHERE CustomerID = 26;
+
+SELECT 
+  CustomerID,
+  FirstName,
+  LastName,
+  Address,
+  City,
+  State
+FROM
+  Customers
+WHERE 
+  CustomerID = 26
+
+-----------------------------------------------------
+-----------------------------------------------------
+01_06 Remove inforamtion from the database
+-- Remove incorrect information from the database.
+
+-- A customer named Norby has notified us he won't 
+-- be able to keep his Friday reservation. 
+-- Today is July 24, 2022.
+
+SELECT 
+  C.FirstName,
+  C.LastName,
+  R.ReservationID,
+  R.Date
+FROM 
+  Customers C
+JOIN 
+  Reservations R ON R.CustomerID = C.CustomerID
+WHERE
+  R.Date > '2022-07-24'
+AND 
+  C.FirstName = 'Norby'
+
+DELETE 
+FROM Reservations 
+WHERE ReservationID = 2000;
+
+SELECT * 
+FROM Reservations 
+WHERE ReservationID = 2000;
+
+-----------------------------------------------------
+-----------------------------------------------------
+01_07 Log customer responses to an inviitation
+-- Register a customer for our Anniversary event.
+
+-- The customer 'atapley2j@kinetecoinc.com' will be in
+-- attendance, and will bring 3 friends.
+
+SELECT
+  FirstName,
+  LastName,
+  Email
+FROM
+  Customers
+WHERE 
+  Email = 'atapley2j@kinetecoinc.com'
+
+INSERT INTO 
+  AnniversaryParty (CustomerID, NumberInParty)
+ VALUES (
+        (SELECT  
+          CustomerID
+        FROM
+          Customers
+        WHERE  
+          Email = 'atapley2j@kinetecoinc.com'),
+       4);
+
+SELECT *
+FROM AnniversaryParty
+
+-----------------------------------------------------
+-----------------------------------------------------
+01_08 Find Reservation
+-- Find the reservation information for a customer whose
+-- name we aren't quite sure how to spell.
+
+-- Variations of the name include:
+-- Stevensen, Stephensen, Stevenson, Stephenson, Stuyvesant
+
+-- There are four people in the party. Today is June 14th.
+SELECT 
+  R.Date,
+  R.PartySize,
+  C.LastName,
+  C.FirstName
+FROM
+  Reservations R
+JOIN
+  Customers C ON C.CustomerID = R.CustomerID
+WHERE 
+  R.Date LIKE '%06-14%'
+AND
+  R.PartySize = 4
+AND
+  C.LastName Like 'St%'
+-----------------------------------------------------
+-----------------------------------------------------
+01_09 Take a Reservation
+-- Create a reservation for a customer who may or may not
+-- already be listed in our Customers table.
+
+-- Use the following information:
+-- Sam McAdams (smac@kinetecoinc.com), for 5 people
+-- on August 12, 2022 at 6PM (18:00)
+-- Phone (555) 555-1212
+
+SELECT *
+FROM CUSTOMERS
+WHERE
+  LastName = 'McAdams'
+
+INSERT INTO 
+  Customers (FirstName, LastName, Email, Phone)
+VALUES
+  ('Sam', 'McAdams', 'smac@kinetecoinc.com', '(555) 555-1212');
+
+SELECT *
+FROM CUSTOMERS
+WHERE
+  LastName = 'McAdams'
+  
+INSERT INTO
+  Reservations (CustomerID, Date, PartySize)
+VALUES
+  ((SELECT CustomerID 
+      FROM Customers
+      WHERE LastName = 'McAdams'), 
+  '2022-08-12 18:00:00',
+  5);
+
+SELECT *
+FROM  
+  Reservations
+WHERE 
+  CustomerID = 
+  (SELECT CustomerID 
+      FROM Customers
+      WHERE LastName = 'McAdams')
+	  
+-----------------------------------------------------
+-----------------------------------------------------
+01_10 Take Delivery Order
+-- Enter a customer's delivery order into our database, 
+-- and provide the total cost of the items ordered.
+
+-- Use this order information:
+-- Customer: Loretta Hundey, at 6939 Elka Place
+-- Items: 1 House Salad, 1 Mini Cheeseburgers, and
+-- 1 Tropical Blue Smoothie
+-- Delivery date and time: September 20, 2022 @ 2PM (14:00)
+-- There are no taxes or other fees.
+
+SELECT *
+FROM Customers
+WHERE 
+  LastName = 'Hundey'
+AND 
+  Address LIKE '%Elka Place%'
+
+SELECT *
+FROM Dishes
+WHERE NAME IN ('House Salad', 'Mini Cheeseburgers', 'Tropical Blue Smoothie')
+
+SELECT *
+FROM Orders
+
+INSERT INTO
+  Orders (CustomerID, OrderDate)
+VALUES ((SELECT CustomerID
+          FROM Customers
+          WHERE
+            LastName = 'Hundey'
+          AND 
+            Address LIKE '%Elka Place%'),
+        '2022-09-20 14:00:00')
+
+SELECT *
+FROM Orders
+WHERE CustomerID = (SELECT CustomerID
+      FROM Customers
+      WHERE 
+        LastName = 'Hundey'
+      AND 
+        Address LIKE '%Elka Place%')
+AND 
+  OrderDate = '2022-09-20 14:00:00'
+
+SELECT *
+FROM OrdersDishes
+
+INSERT INTO
+  OrdersDishes (OrderID, DishID)
+VALUES ((SELECT OrderID
+        FROM Orders
+        WHERE CustomerID = (SELECT CustomerID
+            FROM Customers
+              WHERE 
+                LastName = 'Hundey'
+              AND 
+                Address LIKE '%Elka Place%')
+        AND 
+          OrderDate = '2022-09-20 14:00:00'),
+      (SELECT DishID
+        FROM Dishes
+        WHERE Name = 'House Salad')),
+((SELECT OrderID
+        FROM Orders
+        WHERE CustomerID = (SELECT CustomerID
+            FROM Customers
+              WHERE 
+                LastName = 'Hundey'
+              AND 
+                Address LIKE '%Elka Place%')
+        AND 
+          OrderDate = '2022-09-20 14:00:00'),
+      (SELECT DishID
+        FROM Dishes
+        WHERE Name = 'Mini Cheeseburgers')),
+((SELECT OrderID
+        FROM Orders
+        WHERE CustomerID = (SELECT CustomerID
+            FROM Customers
+              WHERE 
+                LastName = 'Hundey'
+              AND 
+                Address LIKE '%Elka Place%')
+        AND 
+          OrderDate = '2022-09-20 14:00:00'),
+      (SELECT DishID
+        FROM Dishes
+        WHERE Name = 'Tropical Blue Smoothie'))    
+
+SELECT *
+FROM OrdersDishes
+ORDER BY OrdersDishesID DESC
+
+SELECT
+  C.FirstName,
+  C.LastName,
+  O.OrderDate,
+  D.Name,
+  SUM (D.Price)
+FROM
+  Customers C
+JOIN
+  Orders O ON O.CustomerID = C.CustomerID
+JOIN
+  OrdersDishes OD ON OD.OrderID = O.OrderID
+JOIN
+  Dishes D ON D.DishID = OD.DishID
+
+WHERE
+  C.LastName = 'Hundey'
+AND 
+ O.OrderDate = '2022-09-20 14:00:00'
+-----------------------------------------------------
+-----------------------------------------------------
+01_11 Track your customer's favorite dishes
+-- Update information in the database.
+
+-- Set Cleo Goldwater's favorite dish to
+-- the Quinoa Salmon Salad.
+
+SELECT 
+  CustomerID,
+  FirstName,
+  LastName,
+  FavoriteDish
+FROM
+  Customers
+WHERE
+  LastName = 'Goldwater'
+
+SELECT 
+  DishID
+FROM
+  Dishes
+WHERE
+  Name LIKE 'Quinoa Salmon Salad'
+
+UPDATE Customers
+SET FavoriteDish = 
+	(SELECT DishID
+    FROM Dishes
+    WHERE Name LIKE 'Quinoa Salmon Salad')
+WHERE CustomerID = 
+	(SELECT CustomerID
+    FROM Customers
+    WHERE LastName = 'Goldwater')
+	
+-----------------------------------------------------
+-----------------------------------------------------
+01_12 Prepare report of your top customers
+SELECT 
+  COUNT (O.OrderID) AS TotalOrders,
+  C.FirstName,
+  C.LastName,
+  C.Email
+FROM
+  Orders O
+JOIN
+  Customers C ON O.CustomerID = C.CustomerID
+GROUP BY
+  O.CustomerID
+ORDER BY
+  TotalOrders DESC
+LIMIT 15;
+
+-----------------------------------------------------
+-----------------------------------------------------
+02_01 Check Book Availability
+-- Determine how many copies of the book 'Dracula'
+-- are available for library patrons to borrow.
+
+SELECT 
+  COUNT (Title) AS TotalCopies
+FROM
+  Books
+WHERE 
+  Title = 'Dracula'
+
+SELECT 
+  COUNT (L.BookID) AS CheckedOut
+FROM 
+  Loans L
+JOIN
+  Books B ON L.BookID = B.BookID
+WHERE
+  ReturnedDate ISNULL
+AND
+  B.Title LIKE 'Dracula'
+
+SELECT
+  (SELECT COUNT (Title) AS TotalCopies
+  FROM Books
+  WHERE Title = 'Dracula') -
+  (SELECT COUNT (L.BookID) AS CheckedOut
+  FROM Loans L
+  JOIN Books B ON L.BookID = B.BookID
+  WHERE ReturnedDate ISNULL
+  AND B.Title LIKE 'Dracula')
+AS CopiesAvailable
+
+-----------------------------------------------------
+-----------------------------------------------------
+02_02 Add new books to the library
+-- Add books to the library database.
+
+-- Title: Dracula
+-- Author: Bram Stoker
+-- Published: 1897
+-- ID Number: 4819277482
+
+-- Title: Gulliver’s Travels into Several Remote Nations of the World
+-- Author: Jonathan Swift
+-- Published: 1729
+-- ID Number: 4899254401
+
+SELECT *
+FROM 
+  Books
+WHERE
+  Barcode IN ("4819277482", "4899254401")
+
+INSERT INTO 
+  Books (Title, Author, Published, Barcode)
+VALUES
+  ("Dracula", "Bram Stoker", "1897", "4819277482"),
+  ("Gulliver’s Travels into Several Remote Nations of the World", "Jonathan Swift", "1729", "4899254401");
+
+-----------------------------------------------------
+-----------------------------------------------------
+02_03 Check Out Books
+
+-- Check out two books for Jack Vaan (jvaan@wisdompets.com).
+-- Book 1: The Picture of Dorian Gray, 2855934983
+-- Book 2: Great Expectations, 4043822646
+-- The checkout date is August 25, 2022 and the 
+-- due date is September 8, 2022.
+
+SELECT PatronID
+FROM
+  Patrons
+WHERE 
+  Email = "jvaan@wisdompets.com"
+
+SELECT BookID
+FROM  
+  Books
+WHERE
+  Barcode IN ("2855934983", "4043822646")
+
+INSERT INTO 
+  Loans (PatronID, BookID, LoanDate, DueDate)
+VALUES ((SELECT PatronID 
+          FROM Patrons
+          WHERE Email = "jvaan@wisdompets.com"),
+        (SELECT BookID
+          FROM Books
+          WHERE Barcode = ("2855934983")),
+      "2022-08-25", "2022-09-08"),
+     ((SELECT PatronID 
+          FROM Patrons
+          WHERE Email = "jvaan@wisdompets.com"),
+        (SELECT BookID
+          FROM Books
+          WHERE Barcode = ("4043822646")),
+      "2022-08-25", "2022-09-08")
+
+SELECT *
+FROM 
+  Loans
+WHERE PatronID = (SELECT PatronID
+        FROM Patrons
+        WHERE Email = "jvaan@wisdompets.com")
+AND 
+  LoanDate = "2022-08-25"  
+-----------------------------------------------------
+-----------------------------------------------------
+02_04 Check for books due back
+-- Prepare a report of books due to be returned
+-- to the library on July 13, 2022.
+-- Provide the due date, the book title, and
+-- the borrower's first name and email address.
+SELECT 
+  L.DueDate,
+  B.Title,
+  P.FirstName,
+  P.Email
+FROM
+  Loans L
+JOIN
+  Books B ON L.BookID = B.BookID
+JOIN
+  Patrons P ON L.PatronID = P.PatronID
+
+WHERE 
+  L.DueDate = "2022-07-13"
+AND 
+  l.ReturnedDate ISNULL
+-----------------------------------------------------
+-----------------------------------------------------
+02_05 Return books to the library
+-- Return three books to the library using
+-- their bar codes.
+-- Return date: July 5, 2022
+-- Book 1: 6435968624
+-- Book 2: 5677520613
+-- Book 3: 8730298424
+
+SELECT *
+FROM 
+  Books
+WHERE 
+  Barcode in ("6435968624", "5677520613", "8730298424");
+
+SELECT *
+FROM
+  Loans
+WHERE
+  BookID IN (SELECT BookID 
+              FROM Books
+              WHERE Barcode 
+                IN ("6435968624", "5677520613", "8730298424"))
+AND
+  ReturnedDate ISNULL;
+
+UPDATE Loans
+SET ReturnedDate = '2022-07-05'
+WHERE
+  BookID IN (SELECT BookID 
+              FROM Books
+              WHERE Barcode = "6435968624")
+AND
+  ReturnedDate ISNULL;
+
+UPDATE Loans
+SET ReturnedDate = '2022-07-05'
+WHERE
+  BookID IN (SELECT BookID 
+              FROM Books
+              WHERE Barcode = "5677520613")
+AND
+  ReturnedDate ISNULL;
+
+UPDATE Loans
+SET ReturnedDate = '2022-07-05'
+WHERE
+  BookID IN (SELECT BookID 
+              FROM Books
+              WHERE Barcode = "8730298424")
+AND
+  ReturnedDate ISNULL;
+
+SELECT *
+FROM
+  Loans
+WHERE
+  BookID IN (SELECT BookID 
+              FROM Books
+              WHERE Barcode 
+                IN ("6435968624", "5677520613", "8730298424"))
+AND
+  ReturnedDate = '2022-07-05';
+-----------------------------------------------------
+-----------------------------------------------------
+02_06 Encourage patrons to check out books
+-- Prepare a report of the library patrons
+-- who have checked out the fewest books.
+
+SELECT 
+  COUNT(L.LoanID) AS NumberOfCheckouts,
+  P.FirstName,
+  P.LastName
+FROM
+  Loans L
+JOIN
+  Patrons P ON L.PatronID = P.PatronID
+GROUP BY
+  L.PatronID
+ORDER BY
+  NumberOfCheckouts ASC
+LIMIT 9;
+-----------------------------------------------------
+-----------------------------------------------------
+02_07 Find books to feature for an event
+-- Create a list of books to feature in an exhibit.
+
+-- Make a pick list of books published from 1890-1899 
+-- which are not currently checked out.
+
+SELECT 
+  Barcode,
+  Title
+FROM
+  Books
+WHERE 
+  Published BETWEEN 1890 AND 1899
+AND
+  (BookID NOT IN 
+    (SELECT BookID
+      FROM Loans 
+      WHERE ReturnedDate IS NULL)) 
+ORDER BY
+  Title
+-----------------------------------------------------
+-----------------------------------------------------
+02_08 Book statistics
+-- Create two reports about book statistics.
+
+-- Report 1: Show how many titles were published 
+-- in each year.
+
+SELECT 
+  Published,
+  Count(DISTINCT(Title)) AS Total,
+  GROUP_CONCAT(DISTINCT(Title))
+FROM 
+  Books
+GROUP BY 
+  Published
+ORDER BY
+  Total DESC
+
+-- Report 2: Show the five books that have been
+-- checked out the most.
+SELECT
+  COUNT (B.Title) AS TotalCheckouts,
+  B.Title
+FROM
+  Loans L
+JOIN
+  Books B ON L.BookID = B.BookID
+GROUP BY 
+  B.Title
+ORDER BY 
+  TotalCheckouts DESC
+LIMIT 5
+  
